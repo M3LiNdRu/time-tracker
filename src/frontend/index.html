@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking your time</title>
+</head>
+<body>
+
+<h1>Tracking your time</h1>
+<p id="timer">00:00:00</p>
+<button onclick="startTimer()">Inicia</button>
+<button onclick="stopTimer()">Atura</button>
+
+<script>
+    let seconds = 0;
+    let timerInterval;
+
+    function startTimer() {
+        if (!timerInterval) { 
+            timerInterval = setInterval(updateTimer, 1000);
+            const data = {
+                timestamp: new Date().toISOString(),
+                type: "in"
+            };
+            post(data);
+        }
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        const data = {
+            timestamp: new Date().toISOString(),
+            type: "out"
+        };
+        post(data);
+    }
+
+    function updateTimer() {
+        seconds++;
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        document.getElementById("timer").textContent =
+            `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+    }
+
+    function pad(num) {
+        return num < 10 ? "0" + num : num;
+    }
+
+    function post(data) {
+        const url = 'http://localhost:3000/api/timestamp';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("Petició enviada amb èxit!");
+            } else {
+                alert("Hi ha hagut un error en enviar la petició.");
+            }
+        })
+        .catch(error => {
+            console.error("Error en la petició:", error);
+        });
+    }
+</script>
+
+</body>
+</html>
