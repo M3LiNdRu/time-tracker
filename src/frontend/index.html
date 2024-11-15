@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tracking your time</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
 </head>
 <body>
 
@@ -11,6 +16,28 @@
 <p id="timer">00:00:00</p>
 <button onclick="startTimer()">Inicia</button>
 <button onclick="stopTimer()">Atura</button>
+
+<div>
+    <h1>Resum diari</h1>
+    <table id="dadesTaula">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Entrada</th>
+                <th>Sortida</th>
+                <th>Estimat</th>
+                <th>Actual</th>
+                <th>Extra</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Les dades es carregaran aquí amb JavaScript -->
+        </tbody>
+        <tfooter>
+            <!-- Les dades es carregaran aquí amb JavaScript -->
+        </tfooter>
+    </table>
+</div>
 
 <script>
     let seconds = 0;
@@ -72,6 +99,37 @@
             console.error("Error en la petició:", error);
         });
     }
+</script>
+
+<script>
+    async function obtenirDades() {
+        try {
+            const resposta = await fetch('http://localhost:3000/api/summaries/daily');
+            if (!resposta.ok) throw new Error(`Error: ${resposta.status}`);
+            
+            const dades = await resposta.json();
+
+            const tbody = document.getElementById('dadesTaula').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            Object.entries(dades).forEach(([key, dada]) => {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>${key}</td>
+                    <td>${new Date(dada.in).toTimeString().slice(0, 8)}</td>
+                    <td>${new Date(dada.out).toTimeString().slice(0, 8)}</td>
+                    <td>${dada.estimated} hores</td>
+                    <td>${Math.floor(dada.current)} hores i ${Math.round((dada.current - Math.floor(dada.current)) * 60)} minuts</td>
+                    <td>${Math.floor(dada.overtime)} hores i ${Math.round((dada.overtime - Math.floor(dada.overtime)) * 60)} minuts</td>
+                `;
+                tbody.appendChild(fila);
+            });
+        } catch (error) {
+            console.error('Hi ha hagut un problema en obtenir les dades:', error);
+        }
+    }
+
+    window.onload = obtenirDades;
 </script>
 
 </body>

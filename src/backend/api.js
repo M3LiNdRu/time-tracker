@@ -42,4 +42,55 @@ app.post('/api/timestamp', async (req, res) => {
   }
 });
 
+app.get('/api/summaries/daily', async (req, res) => {
+  try {
+    const estimated = 8;
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const from = new Date(currentYear, currentMonth, 1);
+    const to = new Date(currentYear, currentMonth, 1);
+    to.setMonth(from.getMonth() + 1);
+
+    const timestamps = await Timestamp
+      .find({/* timestamp: { $gte: from, $lt: to} */})
+      .sort({ timestamp: 1})
+      .exec();
+
+    const groups = Object.groupBy(timestamps, element => {
+        const date = new Date(element.timestamp);
+        return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getUTCDate()}`;
+    })
+
+    const entries = {};
+    Object.entries(groups).forEach(([date, values]) => {
+        const current = values
+          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+          .reduce((acc, _, index, array) => {
+            if (index % 2 === 0 && index + 1 < array.length) {
+              const previous = new Date(array[index].timestamp);
+              const current = new Date(array[index + 1].timestamp);
+              const differenceMs = current - previous;
+              acc += differenceMs / (1000 * 60 * 60); 
+            }
+            return acc;
+          }, 0);
+        
+        entries[date] = {
+          in: new Date(Math.min(...values.filter(e => e.type === "in").map(date => new Date(date.timestamp)))),
+          out: new Date(Math.max(...values.filter(e => e.type === "out").map(date => new Date(date.timestamp)))),
+          estimated: estimated,
+          current: current,
+          overtime: current - estimated
+        };
+    });
+
+    res.json(entries);
+  }
+  catch (error) {
+    console.error('Error en obtenir les dades:', error);
+    res.sendStatus(500);
+  }
+});
+
 app.listen(3000);
