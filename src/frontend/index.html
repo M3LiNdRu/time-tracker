@@ -14,6 +14,7 @@
 
 <h1>Tracking your time</h1>
 <p id="timer">00:00:00</p>
+<input id="checkbox" type="checkbox"> <span>Office</span>
 <button onclick="startTimer()">Inicia</button>
 <button onclick="stopTimer()">Atura</button>
 
@@ -48,7 +49,8 @@
             timerInterval = setInterval(updateTimer, 1000);
             const data = {
                 timestamp: new Date().toISOString(),
-                type: "in"
+                type: "in",
+                office: document.getElementById("checkbox").checked
             };
             post(data);
         }
@@ -59,7 +61,8 @@
         timerInterval = null;
         const data = {
             timestamp: new Date().toISOString(),
-            type: "out"
+            type: "out",
+            office: document.getElementById("checkbox").checked
         };
         post(data);
     }
@@ -115,7 +118,7 @@
             Object.entries(dades).forEach(([key, dada]) => {
                 const fila = document.createElement('tr');
                 fila.innerHTML = `
-                    <td>${key}</td>
+                    <td>${key} <span class="badge">${dada.office ? "[office]" : ""}</span> </td>
                     <td>${new Date(dada.in).toTimeString().slice(0, 8)}</td>
                     <td>${new Date(dada.out).toTimeString().slice(0, 8)}</td>
                     <td>${dada.estimated} hores</td>

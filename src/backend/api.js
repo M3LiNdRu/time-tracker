@@ -10,7 +10,8 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
 
 const schema = new mongoose.Schema({
   timestamp: String,
-  type: String
+  type: String,
+  office: Boolean
 });
 const Timestamp = mongoose.model('timestamps', schema);
 
@@ -31,7 +32,8 @@ app.post('/api/timestamp', async (req, res) => {
   try {
     const newItem = new Timestamp({
       timestamp: req.body.timestamp,
-      type: req.body.type
+      type: req.body.type,
+      office: req.body.office
     });
     await newItem.save();
     res.sendStatus(201);
@@ -81,7 +83,8 @@ app.get('/api/summaries/daily', async (req, res) => {
           out: new Date(Math.max(...values.filter(e => e.type === "out").map(date => new Date(date.timestamp)))),
           estimated: estimated,
           current: current,
-          overtime: current - estimated
+          overtime: current - estimated,
+          office: values[0].office
         };
     });
 
